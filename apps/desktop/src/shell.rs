@@ -1,26 +1,41 @@
-use gpui::{div, prelude::*, App, Context, Entity, Window};
+use gpui::{App, Context, Entity, Window, div, prelude::*};
 
+use crate::components::{Orientation, ResizablePanelGroup};
 use crate::panels::{Browser, Inspector, Preview, Timeline};
 use crate::theme::ActiveTheme;
 
-// Panels are entities created once in `new`, not via `cx.new` inline in
-// `render`, so each keeps its own state across renders instead of being
-// torn down and rebuilt on every frame.
+// The complete workspace is created once in `new`, not inline in `render`, so
+// panels and divider positions keep their state across renders.
 pub(crate) struct Shell {
-    browser: Entity<Browser>,
-    preview: Entity<Preview>,
-    inspector: Entity<Inspector>,
-    timeline: Entity<Timeline>,
+    workspace: Entity<ResizablePanelGroup>,
 }
 
 impl Shell {
     pub(crate) fn new(cx: &mut App) -> Self {
-        Self {
-            browser: cx.new(|_| Browser),
-            preview: cx.new(|_| Preview),
-            inspector: cx.new(|_| Inspector),
-            timeline: cx.new(|_| Timeline),
-        }
+        let browser = cx.new(|_| Browser);
+        let preview = cx.new(|_| Preview);
+        let inspector = cx.new(|_| Inspector);
+        let timeline = cx.new(|_| Timeline);
+
+        // The preview consumes two thirds of the right-hand area, producing
+        // the familiar 25% browser / 50% preview / 25% inspector layout.
+        let preview_and_inspector = cx.new(|_| {
+            ResizablePanelGroup::new(Orientation::Horizontal, preview, inspector)
+                .initial_fraction(2.0 / 3.0)
+                .minimum_fraction(0.15)
+        });
+        let upper_workspace = cx.new(|_| {
+            ResizablePanelGroup::new(Orientation::Horizontal, browser, preview_and_inspector)
+                .initial_fraction(0.25)
+                .minimum_fraction(0.15)
+        });
+        let workspace = cx.new(|_| {
+            ResizablePanelGroup::new(Orientation::Vertical, upper_workspace, timeline)
+                .initial_fraction(2.0 / 3.0)
+                .minimum_fraction(0.2)
+        });
+
+        Self { workspace }
     }
 }
 
@@ -34,16 +49,6 @@ impl Render for Shell {
             .size_full()
             .bg(colors.background)
             .text_color(colors.foreground)
-            .child(
-                div()
-                    .flex()
-                    .h_2_3()
-                    .border_b_1()
-                    .border_color(colors.border)
-                    .child(self.browser.clone())
-                    .child(self.preview.clone())
-                    .child(self.inspector.clone()),
-            )
-            .child(self.timeline.clone())
+            .child(self.workspace.clone())
     }
 }

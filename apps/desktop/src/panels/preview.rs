@@ -1,4 +1,4 @@
-use gpui::{div, prelude::*, Context, Window};
+use gpui::{Context, Window, div, prelude::*};
 
 use crate::theme::ActiveTheme;
 
@@ -10,8 +10,7 @@ impl Render for Preview {
 
         div()
             .flex()
-            .w_1_2()
-            .h_full()
+            .size_full()
             .items_center()
             .justify_center()
             .bg(colors.background)
