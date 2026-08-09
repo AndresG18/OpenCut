@@ -1,0 +1,6 @@
+[package]
+name = "ids"
+description = "Opaque editor-core entity identifiers"
+version.workspace = true
+edition.workspace = true
+license.workspace = true

@@ -11,4 +11,7 @@ thiserror = { workspace = true }
 time = { workspace = true }
 
 [dev-dependencies]
+clips = { workspace = true }
+ids = { workspace = true }
 serde_json = "1"
+timelines = { workspace = true }

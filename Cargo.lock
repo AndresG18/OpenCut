@@ -855,8 +855,20 @@ dependencies = [
 name = "clip-finder"
 version = "0.1.0"
 dependencies = [
+ "clips",
+ "ids",
  "serde",
  "serde_json",
+ "thiserror 2.0.19",
+ "time",
+ "timelines",
+]
+
+[[package]]
+name = "clips"
+version = "0.1.0"
+dependencies = [
+ "ids",
  "thiserror 2.0.19",
  "time",
 ]
@@ -2736,6 +2748,10 @@ dependencies = [
  "icu_normalizer",
  "icu_properties",
 ]
+
+[[package]]
+name = "ids"
+version = "0.1.0"
 
 [[package]]
 name = "image"
@@ -5577,6 +5593,16 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.19",
+]
+
+[[package]]
+name = "timelines"
+version = "0.1.0"
+dependencies = [
+ "clips",
+ "ids",
+ "thiserror 2.0.19",
+ "time",
 ]
 
 [[package]]

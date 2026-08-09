@@ -18,3 +18,6 @@ bytemuck = { version = "1", features = ["derive"] }
 wgpu = "25.0.2"
 time = { path = "crates/time" }
 decode = { path = "crates/decode" }
+ids = { path = "crates/ids" }
+clips = { path = "crates/clips" }
+timelines = { path = "crates/timelines" }
