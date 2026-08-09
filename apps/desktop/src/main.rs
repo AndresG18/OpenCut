@@ -5,6 +5,7 @@ use gpui::{
 
 mod components;
 mod panels;
+mod review;
 mod shell;
 mod theme;
 

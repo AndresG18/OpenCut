@@ -3745,7 +3745,12 @@ dependencies = [
 name = "opencut-desktop"
 version = "0.1.0"
 dependencies = [
+ "clip-finder",
+ "clips",
  "gpui",
+ "ids",
+ "time",
+ "timelines",
 ]
 
 [[package]]

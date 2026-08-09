@@ -10,4 +10,9 @@ name = "opencut-desktop"
 path = "src/main.rs"
 
 [dependencies]
+clip-finder = { workspace = true }
+clips = { workspace = true }
 gpui = { workspace = true }
+ids = { workspace = true }
+time = { workspace = true }
+timelines = { workspace = true }

@@ -2,6 +2,7 @@ use gpui::{App, Context, Entity, Window, div, prelude::*};
 
 use crate::components::{Orientation, ResizablePanelGroup};
 use crate::panels::{Browser, Inspector, Preview, Timeline};
+use crate::review::ClipReview;
 use crate::theme::ActiveTheme;
 
 // The complete workspace is created once in `new`, not inline in `render`, so
@@ -12,10 +13,11 @@ pub(crate) struct Shell {
 
 impl Shell {
     pub(crate) fn new(cx: &mut App) -> Self {
-        let browser = cx.new(|_| Browser);
+        let review = cx.new(|_| ClipReview::demo());
+        let browser = cx.new(|cx| Browser::new(review.clone(), cx));
         let preview = cx.new(|_| Preview);
         let inspector = cx.new(|_| Inspector);
-        let timeline = cx.new(|_| Timeline);
+        let timeline = cx.new(|cx| Timeline::new(review, cx));
 
         // The preview consumes two thirds of the right-hand area, producing
         // the familiar 25% browser / 50% preview / 25% inspector layout.

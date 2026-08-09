@@ -21,3 +21,4 @@ decode = { path = "crates/decode" }
 ids = { path = "crates/ids" }
 clips = { path = "crates/clips" }
 timelines = { path = "crates/timelines" }
+clip-finder = { path = "crates/clip-finder" }
