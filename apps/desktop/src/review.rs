@@ -1,6 +1,7 @@
 use clip_finder::{
     AspectRatio, CandidateEvaluation, ClipProfile, ClipRequest, ClipSuggestion, DurationRange,
-    EvaluationScores, RankingWeights, TranscriptSegment, generate_candidates, rank_suggestions,
+    EvaluationScores, REVIEW_PACKAGE_SCHEMA_VERSION, RankingWeights, ReviewPackage,
+    TranscriptSegment, generate_candidates, rank_suggestions,
 };
 use clips::{Clip, ClipKind, VideoClip};
 use ids::{AssetId, ClipId, TimelineId};
@@ -31,6 +32,97 @@ pub(crate) struct ClipReview {
 }
 
 impl ClipReview {
+    pub(crate) fn from_environment_or_demo() -> Self {
+        let Some(path) = std::env::var_os("OPENCUT_REVIEW_PACKAGE") else {
+            return Self::demo();
+        };
+        match Self::from_package_path(&path) {
+            Ok(review) => review,
+            Err(error) => {
+                eprintln!(
+                    "Could not load OPENCUT_REVIEW_PACKAGE at {}: {error}. Falling back to the built-in demo.",
+                    std::path::Path::new(&path).display()
+                );
+                Self::demo()
+            }
+        }
+    }
+
+    pub(crate) fn from_package_path(path: impl AsRef<std::path::Path>) -> Result<Self, String> {
+        let path = path.as_ref();
+        let bytes = std::fs::read(path)
+            .map_err(|error| format!("cannot read {}: {error}", path.display()))?;
+        let package: ReviewPackage = serde_json::from_slice(&bytes)
+            .map_err(|error| format!("invalid review package JSON: {error}"))?;
+        Self::from_package(package)
+    }
+
+    pub(crate) fn from_package(package: ReviewPackage) -> Result<Self, String> {
+        if package.schema_version != REVIEW_PACKAGE_SCHEMA_VERSION {
+            return Err(format!(
+                "unsupported review package schema {}; expected {}",
+                package.schema_version, REVIEW_PACKAGE_SCHEMA_VERSION
+            ));
+        }
+        package
+            .request
+            .validate()
+            .map_err(|error| error.to_string())?;
+        let zero = RationalTime::new(0, 1).expect("one is a valid denominator");
+        if !zero.lt(&package.source_duration) {
+            return Err("review package source duration must be positive".into());
+        }
+        if package.suggestions.is_empty() {
+            return Err("review package has no suggestions".into());
+        }
+        let mut candidate_ids = std::collections::HashSet::new();
+        for suggestion in &package.suggestions {
+            let candidate = &suggestion.candidate;
+            if candidate.start.lt(&zero)
+                || !candidate.start.lt(&candidate.end)
+                || package.source_duration.lt(&candidate.end)
+            {
+                return Err(format!(
+                    "candidate {} falls outside the source duration",
+                    candidate.id
+                ));
+            }
+            if !candidate_ids.insert(candidate.id) {
+                return Err(format!("candidate {} appears more than once", candidate.id));
+            }
+            if suggestion.title.trim().is_empty() || suggestion.reason.trim().is_empty() {
+                return Err(format!(
+                    "candidate {} must have a title and review reason",
+                    candidate.id
+                ));
+            }
+            if !suggestion.overall_score.is_finite()
+                || !(0.0..=1.0).contains(&suggestion.overall_score)
+            {
+                return Err(format!(
+                    "candidate {} has an invalid overall score",
+                    candidate.id
+                ));
+            }
+        }
+
+        Ok(Self {
+            profile_label: package.request.profile.label,
+            source_duration: package.source_duration,
+            items: package
+                .suggestions
+                .into_iter()
+                .map(|suggestion| ReviewItem {
+                    suggestion,
+                    status: ReviewStatus::Pending,
+                })
+                .collect(),
+            timeline: EditorTimeline::new(TimelineId(1), RationalTime::new(30, 1).unwrap()),
+            next_clip_id: 1,
+            source_asset_id: AssetId(1),
+        })
+    }
+
     pub(crate) fn demo() -> Self {
         let source_duration = seconds(3 * 60 * 60);
         let transcript = (0..2_160)
@@ -199,5 +291,45 @@ mod tests {
     #[test]
     fn formats_long_source_timecodes() {
         assert_eq!(format_timecode(seconds(3_661)), "1:01:01");
+    }
+
+    #[test]
+    fn review_package_populates_the_real_review_queue() {
+        let demo = ClipReview::demo();
+        let suggestions = demo
+            .items
+            .iter()
+            .map(|item| item.suggestion.clone())
+            .collect::<Vec<_>>();
+        let package = ReviewPackage {
+            schema_version: REVIEW_PACKAGE_SCHEMA_VERSION,
+            source_transcript: "/tmp/transcript.json".into(),
+            source_duration: demo.source_duration,
+            request: ClipRequest {
+                profile: ClipProfile {
+                    id: "test".into(),
+                    label: "Imported Review".into(),
+                    duration: DurationRange::new(seconds(61), seconds(65), seconds(75)).unwrap(),
+                    aspect_ratio: None,
+                    instructions: String::new(),
+                },
+                prompt: "Find useful moments".into(),
+                suggestion_limit: suggestions.len(),
+                candidate_limit: 20,
+                max_overlap_percent: 35,
+            },
+            suggestions,
+            generated_by: "test".into(),
+        };
+
+        let review = ClipReview::from_package(package).unwrap();
+        assert_eq!(review.profile_label, "Imported Review");
+        assert_eq!(review.items.len(), 3);
+        assert!(
+            review
+                .items
+                .iter()
+                .all(|item| item.status == ReviewStatus::Pending)
+        );
     }
 }

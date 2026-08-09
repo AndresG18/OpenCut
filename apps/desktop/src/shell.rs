@@ -13,7 +13,7 @@ pub(crate) struct Shell {
 
 impl Shell {
     pub(crate) fn new(cx: &mut App) -> Self {
-        let review = cx.new(|_| ClipReview::demo());
+        let review = cx.new(|_| ClipReview::from_environment_or_demo());
         let browser = cx.new(|cx| Browser::new(review.clone(), cx));
         let preview = cx.new(|_| Preview);
         let inspector = cx.new(|_| Inspector);

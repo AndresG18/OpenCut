@@ -20,7 +20,7 @@ pub use candidate::{batch_candidates, generate_candidates};
 pub use error::ClipFinderError;
 pub use model::{
     AspectRatio, CandidateBatch, CandidateEvaluation, CandidateId, ClipCandidate, ClipProfile,
-    ClipRequest, ClipSuggestion, DurationRange, EvaluationScores, RankingWeights,
-    TranscriptSegment,
+    ClipRequest, ClipSuggestion, DurationRange, EvaluationScores, REVIEW_PACKAGE_SCHEMA_VERSION,
+    RankingWeights, ReviewPackage, TranscriptSegment,
 };
 pub use ranking::rank_suggestions;

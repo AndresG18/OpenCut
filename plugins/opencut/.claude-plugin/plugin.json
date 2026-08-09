@@ -1,0 +1,11 @@
+{
+  "name": "opencut",
+  "version": "0.1.0",
+  "description": "Find social-ready clips from local OpenCut transcripts with Claude Code.",
+  "author": {
+    "name": "OpenCut Contributors"
+  },
+  "repository": "https://github.com/OpenCut-app/OpenCut",
+  "license": "MIT",
+  "keywords": ["video", "transcript", "social-clips", "mcp"]
+}

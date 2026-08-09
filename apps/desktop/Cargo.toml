@@ -14,5 +14,6 @@ clip-finder = { workspace = true }
 clips = { workspace = true }
 gpui = { workspace = true }
 ids = { workspace = true }
+serde_json = "1"
 time = { workspace = true }
 timelines = { workspace = true }

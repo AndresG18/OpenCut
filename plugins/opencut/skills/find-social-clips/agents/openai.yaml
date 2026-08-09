@@ -1,0 +1,4 @@
+interface:
+  display_name: "Find Social Clips"
+  short_description: "Find and rank social-ready video moments"
+  default_prompt: "Use $find-social-clips to find review-ready social clips from my OpenCut transcript."

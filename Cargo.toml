@@ -22,3 +22,4 @@ ids = { path = "crates/ids" }
 clips = { path = "crates/clips" }
 timelines = { path = "crates/timelines" }
 clip-finder = { path = "crates/clip-finder" }
+rmcp = { version = "3.1.2", features = ["transport-io"] }

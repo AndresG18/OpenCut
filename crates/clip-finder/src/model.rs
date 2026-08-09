@@ -3,6 +3,9 @@ use time::RationalTime;
 
 use crate::ClipFinderError;
 
+/// Current on-disk schema written by agent integrations and read by OpenCut.
+pub const REVIEW_PACKAGE_SCHEMA_VERSION: u32 = 1;
+
 /// One contiguous, time-coded portion of a transcript.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TranscriptSegment {
@@ -204,4 +207,18 @@ pub struct ClipSuggestion {
     pub keywords: Vec<String>,
     pub scores: EvaluationScores,
     pub overall_score: f32,
+}
+
+/// Portable handoff between an external clip-finding agent and the editor.
+///
+/// This package contains suggestions only. It never mutates a project or
+/// timeline until the user explicitly accepts an item in OpenCut.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ReviewPackage {
+    pub schema_version: u32,
+    pub source_transcript: String,
+    pub source_duration: RationalTime,
+    pub request: ClipRequest,
+    pub suggestions: Vec<ClipSuggestion>,
+    pub generated_by: String,
 }

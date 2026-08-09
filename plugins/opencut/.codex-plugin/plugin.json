@@ -1,0 +1,27 @@
+{
+  "name": "opencut",
+  "version": "0.1.0",
+  "description": "Find social-ready clips from local OpenCut transcripts with the agent model you already use.",
+  "author": { "name": "OpenCut Contributors" },
+  "homepage": "https://opencut.app",
+  "repository": "https://github.com/OpenCut-app/OpenCut",
+  "license": "MIT",
+  "keywords": ["video", "transcript", "social-clips", "mcp"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "OpenCut",
+    "shortDescription": "Turn transcripts into review-ready social clips",
+    "longDescription": "Uses your current coding agent to score bounded transcript candidates, then lets OpenCut validate, rank, and package exact-timestamp suggestions for human review.",
+    "developerName": "OpenCut Contributors",
+    "category": "Developer Tools",
+    "capabilities": ["Local MCP", "Transcript Analysis", "Write Review Packages"],
+    "websiteURL": "https://opencut.app",
+    "defaultPrompt": [
+      "Find 61-second TikTok clips in my transcript.",
+      "Find 15-second reels and make a review package.",
+      "Resume my OpenCut clip discovery session."
+    ],
+    "brandColor": "#6D5EF5"
+  },
+  "mcpServers": "./.mcp.json"
+}

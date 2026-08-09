@@ -1,5 +1,6 @@
 use clip_finder::{
-    AspectRatio, CandidateId, ClipProfile, ClipRequest, DurationRange, TranscriptSegment,
+    AspectRatio, CandidateId, ClipProfile, ClipRequest, DurationRange,
+    REVIEW_PACKAGE_SCHEMA_VERSION, ReviewPackage, TranscriptSegment,
 };
 use time::RationalTime;
 
@@ -41,4 +42,37 @@ fn request_and_transcript_contract_round_trip() {
         segment
     );
     assert_eq!(serde_json::to_string(&CandidateId::new(42)).unwrap(), "42");
+}
+
+#[test]
+fn empty_review_package_contract_round_trips() {
+    let package = ReviewPackage {
+        schema_version: REVIEW_PACKAGE_SCHEMA_VERSION,
+        source_transcript: "/tmp/transcript.json".into(),
+        source_duration: seconds(10_800),
+        request: ClipRequest {
+            profile: ClipProfile {
+                id: "reel".into(),
+                label: "Quick Reel".into(),
+                duration: DurationRange::new(seconds(15), seconds(20), seconds(30)).unwrap(),
+                aspect_ratio: Some(AspectRatio {
+                    width: 9,
+                    height: 16,
+                }),
+                instructions: String::new(),
+            },
+            prompt: "Find surprising lessons".into(),
+            suggestion_limit: 5,
+            candidate_limit: 100,
+            max_overlap_percent: 35,
+        },
+        suggestions: Vec::new(),
+        generated_by: "test-agent".into(),
+    };
+
+    let json = serde_json::to_string(&package).unwrap();
+    assert_eq!(
+        serde_json::from_str::<ReviewPackage>(&json).unwrap(),
+        package
+    );
 }

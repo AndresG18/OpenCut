@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "opencut": {
+      "type": "stdio",
+      "command": "./scripts/run-mcp.sh",
+      "args": []
+    }
+  }
+}
