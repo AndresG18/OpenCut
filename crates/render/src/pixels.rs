@@ -1,6 +1,8 @@
 use decode::{Frame, PixelFormat};
 
-use crate::plan::{GpuError, RenderError};
+#[cfg(feature = "wgpu-tests")]
+use crate::plan::GpuError;
+use crate::plan::RenderError;
 
 pub fn to_linear_premultiplied(frame: &Frame) -> Result<Vec<u8>, RenderError> {
     let len = frame.width as usize * frame.height as usize * 4;
@@ -22,7 +24,7 @@ pub(crate) fn output_format_to_wgpu(format: crate::plan::OutputFormat) -> wgpu::
     }
 }
 
-#[cfg(any(test, feature = "wgpu-tests"))]
+#[cfg(feature = "wgpu-tests")]
 pub fn readback_rgba8(
     texture: &wgpu::Texture,
     device: &wgpu::Device,
@@ -111,11 +113,12 @@ fn premul_pixel(r: u8, g: u8, b: u8, a: u8, dst: &mut [u8]) {
     dst[3] = a;
 }
 
+#[cfg(feature = "wgpu-tests")]
 fn align_to(value: u32, alignment: u32) -> u32 {
     ((value + alignment - 1) / alignment) * alignment
 }
 
-#[allow(dead_code)]
+#[cfg(feature = "wgpu-tests")]
 fn map_poll_error(_err: wgpu::PollError) -> RenderError {
     RenderError::Gpu(GpuError::Internal)
 }

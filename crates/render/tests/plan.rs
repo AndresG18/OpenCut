@@ -50,13 +50,16 @@ struct HeadlessGpu {
 fn headless_gpu() -> HeadlessGpu {
     pollster::block_on(async {
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::VULKAN | wgpu::Backends::GL,
+            // Let wgpu choose the native backend (Metal on macOS, Vulkan or
+            // GL on Linux, DX12 on Windows) so this integration suite is
+            // portable across every supported desktop platform.
+            backends: wgpu::Backends::all(),
             ..Default::default()
         });
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::LowPower,
-                force_fallback_adapter: true,
+                force_fallback_adapter: false,
                 compatible_surface: None,
             })
             .await
@@ -193,12 +196,7 @@ fn end_of_stream_propagates_as_decode_error() {
 
     let plan = RenderPlan {
         output: test_output(),
-        nodes: vec![node(
-            1,
-            source,
-            stream,
-            RationalTime::new(1, 1).unwrap(),
-        )],
+        nodes: vec![node(1, source, stream, RationalTime::new(1, 1).unwrap())],
     };
 
     assert!(matches!(
