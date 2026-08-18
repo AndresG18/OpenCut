@@ -26,7 +26,7 @@ impl Render for Browser {
         let cards = items
             .into_iter()
             .enumerate()
-            .map(|(index, item)| {
+			.map(|(index, item)| {
                 let candidate = &item.suggestion.candidate;
                 let range = format!(
                     "{} – {}",
@@ -36,8 +36,21 @@ impl Render for Browser {
                 let score = format!("{}% match", (item.suggestion.overall_score * 100.0).round());
                 let reason = item.suggestion.reason.clone();
 
-                let mut actions = div().flex().items_center().gap(px(6.0));
-                match item.status {
+				let mut actions = div().flex().items_center().gap(px(6.0));
+				let review_for_preview = self.review.clone();
+				actions = actions.child(
+					Button::new(("preview-suggestion", index), "Preview")
+						.variant(ButtonVariant::Ghost)
+						.size(ButtonSize::XSmall)
+						.on_click(move |_, _, cx| {
+							review_for_preview.update(cx, |review, cx| {
+								if review.preview(index) {
+									cx.notify();
+								}
+							});
+						}),
+				);
+				match item.status {
                     ReviewStatus::Pending | ReviewStatus::Skipped => {
                         let review_for_accept = self.review.clone();
                         actions = actions.child(

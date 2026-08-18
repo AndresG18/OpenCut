@@ -15,7 +15,7 @@ impl Shell {
     pub(crate) fn new(cx: &mut App) -> Self {
         let review = cx.new(|_| ClipReview::from_environment_or_demo());
         let browser = cx.new(|cx| Browser::new(review.clone(), cx));
-        let preview = cx.new(|_| Preview);
+		let preview = cx.new(|cx| Preview::new(review.clone(), cx));
         let inspector = cx.new(|_| Inspector);
         let timeline = cx.new(|cx| Timeline::new(review, cx));
 

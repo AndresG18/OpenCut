@@ -23,12 +23,13 @@ pub(crate) struct ReviewItem {
 
 /// Shared model observed by both the AI review browser and the timeline panel.
 pub(crate) struct ClipReview {
-    pub profile_label: String,
-    pub source_duration: RationalTime,
-    pub items: Vec<ReviewItem>,
-    pub timeline: EditorTimeline,
-    next_clip_id: u64,
-    source_asset_id: AssetId,
+	pub profile_label: String,
+	pub source_duration: RationalTime,
+	pub items: Vec<ReviewItem>,
+	pub timeline: EditorTimeline,
+	previewed_index: Option<usize>,
+	next_clip_id: u64,
+	source_asset_id: AssetId,
 }
 
 impl ClipReview {
@@ -117,8 +118,9 @@ impl ClipReview {
                     status: ReviewStatus::Pending,
                 })
                 .collect(),
-            timeline: EditorTimeline::new(TimelineId(1), RationalTime::new(30, 1).unwrap()),
-            next_clip_id: 1,
+			timeline: EditorTimeline::new(TimelineId(1), RationalTime::new(30, 1).unwrap()),
+			previewed_index: None,
+			next_clip_id: 1,
             source_asset_id: AssetId(1),
         })
     }
@@ -199,19 +201,20 @@ impl ClipReview {
                     status: ReviewStatus::Pending,
                 })
                 .collect(),
-            timeline: EditorTimeline::new(TimelineId(1), RationalTime::new(30, 1).unwrap()),
-            next_clip_id: 1,
+			timeline: EditorTimeline::new(TimelineId(1), RationalTime::new(30, 1).unwrap()),
+			previewed_index: None,
+			next_clip_id: 1,
             source_asset_id: AssetId(1),
         }
     }
 
-    pub(crate) fn accept(&mut self, index: usize) -> bool {
+	pub(crate) fn accept(&mut self, index: usize) -> bool {
         let Some(item) = self.items.get_mut(index) else {
             return false;
         };
         if item.status == ReviewStatus::Accepted {
             return false;
-        }
+		}
 
         let candidate = &item.suggestion.candidate;
         let Ok(video) = VideoClip::new(self.source_asset_id, candidate.start) else {
@@ -241,6 +244,19 @@ impl ClipReview {
         item.status = ReviewStatus::Accepted;
         true
     }
+
+	/// Select a candidate for review without creating a timeline clip.
+	pub(crate) fn preview(&mut self, index: usize) -> bool {
+		if self.items.get(index).is_none() {
+			return false;
+		}
+		self.previewed_index = Some(index);
+		true
+	}
+
+	pub(crate) fn previewed_item(&self) -> Option<&ReviewItem> {
+		self.previewed_index.and_then(|index| self.items.get(index))
+	}
 
     pub(crate) fn skip(&mut self, index: usize) -> bool {
         let Some(item) = self.items.get_mut(index) else {
@@ -278,7 +294,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn accepting_a_suggestion_updates_the_shared_timeline() {
+	fn accepting_a_suggestion_updates_the_shared_timeline() {
         let mut review = ClipReview::demo();
         let duration = review.items[0].suggestion.candidate.duration().unwrap();
 
@@ -286,7 +302,21 @@ mod tests {
         assert_eq!(review.accepted_count(), 1);
         assert_eq!(review.timeline.duration(), duration);
         assert!(!review.accept(0));
-    }
+	}
+
+	#[test]
+	fn previewing_a_suggestion_does_not_change_the_timeline() {
+		let mut review = ClipReview::demo();
+		let initial_duration = review.timeline.duration();
+
+		assert!(review.preview(1));
+		assert_eq!(
+			review.previewed_item().unwrap().suggestion.title,
+			review.items[1].suggestion.title
+		);
+		assert_eq!(review.accepted_count(), 0);
+		assert_eq!(review.timeline.duration(), initial_duration);
+	}
 
     #[test]
     fn formats_long_source_timecodes() {
