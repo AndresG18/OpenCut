@@ -101,7 +101,7 @@ impl Render for Preview {
 									item.suggestion.reason
 								)),
 						),
-				),
+				)
 			})
 			.when(!has_selected, |this| {
 				this.items_center().justify_center().child(
